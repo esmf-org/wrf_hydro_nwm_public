@@ -153,7 +153,9 @@ MODULE MODULE_MPP_LAND
     call mpi_initialized( mpi_inited, ierr )
     if ( .not. mpi_inited ) then
        call MPI_INIT_THREAD( MPI_THREAD_FUNNELED, provided, ierr )
+       if (ierr /= MPI_SUCCESS) stop "MPI_INIT_THREAD"
        call MPI_COMM_DUP(MPI_COMM_WORLD, HYDRO_COMM_WORLD, ierr)
+       if (ierr /= MPI_SUCCESS) stop "MPI_COMM_DUP"
     endif
 
     call MPI_COMM_RANK( HYDRO_COMM_WORLD, my_id, ierr )

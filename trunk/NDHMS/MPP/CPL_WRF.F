@@ -70,7 +70,9 @@ MODULE MODULE_CPL_LAND
       CALL mpi_initialized( mpi_inited, ierr )
       if ( .NOT. mpi_inited ) then
           call mpi_init(ierr)
-          HYDRO_COMM_WORLD = MPI_COMM_WORLD
+          if (ierr /= MPI_SUCCESS) stop "MPI_INIT"
+          call MPI_COMM_DUP(MPI_COMM_WORLD, HYDRO_COMM_WORLD, ierr)
+          if (ierr /= MPI_SUCCESS) stop "MPI_COMM_DUP"
       endif
 
       call MPI_COMM_RANK( HYDRO_COMM_WORLD, my_global_id, ierr )

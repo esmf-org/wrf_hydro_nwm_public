@@ -509,7 +509,9 @@ program Noah_hrldas_driver
 #ifdef MPP_LAND
   call MPI_INIT(ierr)
   if (ierr /= MPI_SUCCESS) stop "MPI_INIT"
-  call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
+  call MPI_COMM_DUP(MPI_COMM_WORLD, HYDRO_COMM_WORLD, ierr)
+  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_DUP"
+  call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
 #else
   rank = 0
 #endif
@@ -640,12 +642,14 @@ program Noah_hrldas_driver
 
   call MPI_INIT(ierr)
   if (ierr /= MPI_SUCCESS) stop "MPI_INIT"
+  call MPI_COMM_DUP(MPI_COMM_WORLD, HYDRO_COMM_WORLD, ierr)
+  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_DUP"
 
-  call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
+  call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
   if (ierr /= MPI_SUCCESS) stop "MPI_COMM_RANK"
 
-  call MPI_COMM_SIZE(MPI_COMM_WORLD, numtasks, ierr)
-  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_WORLD"
+  call MPI_COMM_SIZE(HYDRO_COMM_WORLD, numtasks, ierr)
+  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_SIZE"
 
 #else
   rank = 0
@@ -681,12 +685,14 @@ program Noah_hrldas_driver
 !KWM
 !KWM  call MPI_INIT(ierr)
 !KWM  if (ierr /= MPI_SUCCESS) stop "MPI_INIT"
+!KWM  call MPI_COMM_DUP(MPI_COMM_WORLD, HYDRO_COMM_WORLD, ierr)
+!KWM  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_DUP"
 !KWM
-!KWM  call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
+!KWM  call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
 !KWM  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_RANK"
 !KWM
-!KWM  call MPI_COMM_SIZE(MPI_COMM_WORLD, numtasks, ierr)
-!KWM  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_WORLD"
+!KWM  call MPI_COMM_SIZE(HYDRO_COMM_WORLD, numtasks, ierr)
+!KWM  if (ierr /= MPI_SUCCESS) stop "MPI_COMM_SIZE"
 !KWM
 !KWM#else
 !KWM  rank = 0
@@ -722,9 +728,9 @@ program Noah_hrldas_driver
 
            if ( j > 0 ) then
               ! Send the starting and ending points we've computed to the appropriate process (rank).
-              call mpi_send( i, 1, MPI_INTEGER, j, 0, MPI_COMM_WORLD, ierr )
+              call mpi_send( i, 1, MPI_INTEGER, j, 0, HYDRO_COMM_WORLD, ierr )
               if (ierr /= MPI_SUCCESS) stop "Problem with MPI_SEND"
-              call mpi_send( ip, 1, MPI_INTEGER, j, 1, MPI_COMM_WORLD, ierr )
+              call mpi_send( ip, 1, MPI_INTEGER, j, 1, HYDRO_COMM_WORLD, ierr )
               if (ierr /= MPI_SUCCESS) stop "Problem with MPI_SEND"
            else
               parallel_xstart = subwindow_xstart
@@ -736,9 +742,9 @@ program Noah_hrldas_driver
         endif
      enddo
   else
-     call mpi_recv( parallel_xend, 1, MPI_INTEGER, 0, 0, MPI_COMM_WORLD, istatus, ierr )
+     call mpi_recv( parallel_xend, 1, MPI_INTEGER, 0, 0, HYDRO_COMM_WORLD, istatus, ierr )
      if (ierr /= MPI_SUCCESS) stop "Problem with MPI_RECV"
-     call mpi_recv( parallel_xstart, 1, MPI_INTEGER, 0, 1, MPI_COMM_WORLD, istatus, ierr )
+     call mpi_recv( parallel_xstart, 1, MPI_INTEGER, 0, 1, HYDRO_COMM_WORLD, istatus, ierr )
      if (ierr /= MPI_SUCCESS) stop "Problem with MPI_RECV"
      ! print*, 'Rank ', rank, ' received ', parallel_xstart, parallel_xend
   endif
@@ -1215,10 +1221,10 @@ program Noah_hrldas_driver
  endif  ! end of rank if block
 
 #ifdef MPP_LAND
-   call mpi_bcast(ix,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-   call mpi_bcast(jx,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-   call mpi_bcast(nsoil,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
-   call mpi_bcast(ntime,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+   call mpi_bcast(ix,1,MPI_INTEGER,0,HYDRO_COMM_WORLD,ierr)
+   call mpi_bcast(jx,1,MPI_INTEGER,0,HYDRO_COMM_WORLD,ierr)
+   call mpi_bcast(nsoil,1,MPI_INTEGER,0,HYDRO_COMM_WORLD,ierr)
+   call mpi_bcast(ntime,1,MPI_INTEGER,0,HYDRO_COMM_WORLD,ierr)
 #endif
 
   print*, "ix =, jx =", ix,jx
@@ -2445,7 +2451,7 @@ program Noah_hrldas_driver
 #ifdef _PARALLEL_
      ! Just for sanity's sake, make sure all processors have caught up 
      ! before continuing to the next time step.
-     call mpi_barrier(MPI_COMM_WORLD, ierr)
+     call mpi_barrier(HYDRO_COMM_WORLD, ierr)
      if (ierr /= MPI_SUCCESS) stop "Problem with MPI_BARRIER"
 #endif
 
@@ -2707,7 +2713,7 @@ SUBROUTINE calc_declin ( nowdate, latitude, longitude, cosz, hrang, declin )
    integer :: rank
 
 #ifdef _PARALLEL_
-  call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
+  call MPI_COMM_RANK(HYDRO_COMM_WORLD, rank, ierr)
   if (ierr /= MPI_SUCCESS) stop "MPI_COMM_RANK"
 #else
   rank = 0
