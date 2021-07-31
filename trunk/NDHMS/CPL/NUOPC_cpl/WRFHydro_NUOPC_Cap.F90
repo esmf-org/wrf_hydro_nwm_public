@@ -239,6 +239,7 @@ module WRFHydro_NUOPC
     model_label_Advance     => label_Advance, &
     model_label_Finalize    => label_Finalize
   use WRFHYDRO_NUOPC_Gluecode
+  use WRFHYDRO_NUOPC_Fields
   use WRFHydro_ESMF_Extensions
 
   implicit none
@@ -265,12 +266,11 @@ module WRFHydro_NUOPC
     logical                  :: multiInstance    = .FALSE.
     character                :: hgrid            = '0'
     integer                  :: nnests           = 1
-    integer                  :: nfields          = size(WRFHYDRO_FieldList)
     type (ESMF_Clock)        :: clock(1)
     type (ESMF_TimeInterval) :: stepTimer(1)
     type(ESMF_State)         :: NStateImp(1)
     type(ESMF_State)         :: NStateExp(1)
-    integer                  :: mode(1)    = WRFHYDRO_Unknown
+    logical                  :: lsm_forcings(1)  = .FALSE.
   endtype
 
   type type_InternalState
@@ -658,83 +658,19 @@ module WRFHydro_NUOPC
       if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     endif
 
-    call WRFHYDRO_FieldDictionaryAdd(rc=rc)
+    call field_dictionary_add(fieldList=cap_fld_list, rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
     !!
     !! advertise import and export fields
     !!
-    do fIndex = 1, size(WRFHYDRO_FieldList)
-      if (WRFHYDRO_FieldList(fIndex)%adImport) then
-        call NUOPC_Advertise(is%wrap%NStateImp(1), &
-          standardName=trim(WRFHYDRO_FieldList(fIndex)%stdname), &
-          name=trim(WRFHYDRO_FieldList(fIndex)%stateName), &
-          rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
-      endif
-      if (WRFHYDRO_FieldList(fIndex)%adExport) then
-        call NUOPC_Advertise(is%wrap%NStateExp(1), &
-          standardName=trim(WRFHYDRO_FieldList(fIndex)%stdname), &
-          name=trim(WRFHYDRO_FieldList(fIndex)%stateName), &
-          rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
-      endif
-    enddo
+    call field_advertise(fieldList=cap_fld_list, &
+      importState=is%wrap%NStateImp(1), &
+      exportState=is%wrap%NStateExp(1), &
+      rc=rc)
+    if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
-    if (btest(verbosity,16)) call LogAdvertised()
-
-    contains ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    subroutine LogAdvertised()
-      ! local variables
-      integer                    :: cntImp
-      integer                    :: cntExp
-      integer                    :: fIndex
-      character(ESMF_MAXSTR)     :: logMsg
-
-      ! Count advertised import and export fields
-      cntImp = 0
-      cntExp = 0
-      do fIndex = 1, size(WRFHydro_FieldList)
-        if (WRFHydro_FieldList(fIndex)%adImport) cntImp = cntImp + 1
-        if (WRFHydro_FieldList(fIndex)%adExport) cntExp = cntExp + 1
-      enddo
-
-      ! Report advertised import fields
-      write(logMsg,'(a,a,i0,a)') TRIM(cname)//': ', &
-        'List of advertised import fields(',cntImp,'):'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      write(logMsg,'(a,a5,a,a16,a,a)') TRIM(cname)//': ', &
-        'index',' ','name',' ','standardName'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      cntImp = 0
-      do fIndex=1, size(WRFHydro_FieldList)
-        if (.NOT.WRFHydro_FieldList(fIndex)%adImport) cycle
-        cntImp = cntImp + 1
-        write(logMsg,'(a,i5,a,a16,a,a)') TRIM(cname)//': ', &
-          cntImp,' ',TRIM(WRFHydro_FieldList(fIndex)%stateName), &
-          ' ',TRIM(WRFHydro_FieldList(fIndex)%stdName)
-        call ESMF_LogWrite(trim(logMsg), ESMF_LOGMSG_INFO)
-      enddo
-
-      ! Report advertised export fields
-      write(logMsg,'(a,a,i0,a)') TRIM(cname)//': ', &
-        'List of advertised export fields(',cntExp,'):'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      write(logMsg,'(a,a5,a,a16,a,a)') TRIM(cname)//': ', &
-        'index',' ','name',' ','standardName'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      cntExp = 0
-      do fIndex=1, size(WRFHydro_FieldList)
-        if (.NOT.WRFHydro_FieldList(fIndex)%adExport) cycle
-        cntExp = cntExp + 1
-        write(logMsg,'(a,i5,a,a16,a,a)') TRIM(cname)//': ', &
-          cntExp,' ',TRIM(WRFHydro_FieldList(fIndex)%stateName), &
-          ' ',TRIM(WRFHydro_FieldList(fIndex)%stdName)
-        call ESMF_LogWrite(trim(LogMsg), ESMF_LOGMSG_INFO)
-      enddo
-
-    end subroutine
+    if (btest(verbosity,16)) call field_advertise_log(cap_fld_list,cname,rc=rc)
 
   end subroutine
 
@@ -805,62 +741,16 @@ module WRFHydro_NUOPC
       if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     endif
 
-    do fIndex = 1, size(WRFHYDRO_FieldList)
-      if (WRFHYDRO_FieldList(fIndex)%adImport) then
-        importConnected = NUOPC_IsConnected(is%wrap%NStateImp(1), &
-          fieldName=WRFHYDRO_FieldList(fIndex)%stateName, rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
-      else
-        importConnected = .FALSE.
-      endif
+    call field_realize(fieldList=cap_fld_list, &
+      importState=is%wrap%NStateImp(1), &
+      exportState=is%wrap%NStateExp(1), &
+      grid=WRFHYDRO_grid, did=is%wrap%did, &
+      realizeAllImport=.FALSE., realizeAllExport=.FALSE., rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
-      if (importConnected) then
-        WRFHYDRO_FieldList(fIndex)%realizedImport = .TRUE.
-        field = WRFHYDRO_FieldCreate(stateName=WRFHYDRO_FieldList(fIndex)%stateName, &
-          grid=WRFHYDRO_grid, &
-          did=is%wrap%did, &
-          rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
-        call NUOPC_Realize(is%wrap%NStateImp(1), field=field, rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return
-      elseif(WRFHYDRO_FieldList(fIndex)%adImport) then
-        call ESMF_StateRemove(is%wrap%NStateImp(1), (/trim(WRFHYDRO_FieldList(fIndex)%stateName)/), &
-          relaxedflag=.true.,rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return
-      endif
-
-      if (WRFHYDRO_FieldList(fIndex)%adExport) then
-        if (is%wrap%realizeAllExport) then
-          exportConnected = .TRUE.
-        else
-          exportConnected = NUOPC_IsConnected(is%wrap%NStateExp(1), &
-            fieldName=WRFHYDRO_FieldList(fIndex)%stateName, rc=rc)
-          if (ESMF_STDERRORCHECK(rc)) return  ! bail out
-        endif
-      else
-        exportConnected = .FALSE.
-      endif
-
-      if (exportConnected) then
-        WRFHYDRO_FieldList(fIndex)%realizedExport = .TRUE.
-        field = WRFHYDRO_FieldCreate(stateName=WRFHYDRO_FieldList(fIndex)%stateName, &
-          grid=WRFHYDRO_grid, &
-          did=is%wrap%did, &
-          rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
-        call NUOPC_Realize(is%wrap%NStateExp(1), field=field,rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return
-      elseif(WRFHYDRO_FieldList(fIndex)%adExport) then
-        call ESMF_StateRemove(is%wrap%NStateExp(1),(/trim(WRFHYDRO_FieldList(fIndex)%stateName)/), &
-          relaxedflag=.true.,rc=rc)
-        if (ESMF_STDERRORCHECK(rc)) return
-      endif
-
-      ! TODO: Initialize the value in the pointer to 0 after proper restart is setup
-      !if(associated(WRFHYDRO_FieldList(fIndex)%farrayPtr) ) WRFHYDRO_FieldList(fIndex)%farrayPtr = 0.0
-      ! remove a not connected Field from State
-
-    enddo
+    ! TODO: Initialize the value in the pointer to 0 after proper restart is setup
+    !if(associated(WRFHYDRO_FieldList(fIndex)%farrayPtr) ) WRFHYDRO_FieldList(fIndex)%farrayPtr = 0.0
+    ! remove a not connected Field from State
 
 !    Model has initialized its own field memory so don't fill state.
 !    call NUOPC_FillState(is%wrap%NStateImp(1),0,rc=rc)
@@ -868,64 +758,13 @@ module WRFHydro_NUOPC
 !    call NUOPC_FillState(is%wrap%NStateExp(1),0,rc=rc)
 !    if (ESMF_STDERRORCHECK(rc)) return
 
-    is%wrap%mode(1) = WRFHYDRO_RunModeGet(is%wrap%NStateImp(1),rc)
+    is%wrap%lsm_forcings(1) = check_lsm_forcings(is%wrap%NStateImp(1),rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
-    if (btest(verbosity,16)) call LogRealized()
+    if (btest(verbosity,16)) call field_realize_log(cap_fld_list,cname,rc=rc)
     if (btest(verbosity,16)) call LogMode()
 
     contains ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    subroutine LogRealized()
-      ! local variables
-      integer                    :: cntImp
-      integer                    :: cntExp
-      integer                    :: fIndex
-      character(ESMF_MAXSTR)     :: logMsg
-
-      ! Count advertised import and export fields
-      cntImp = 0
-      cntExp = 0
-      do fIndex = 1, size(WRFHydro_FieldList)
-        if (WRFHydro_FieldList(fIndex)%realizedImport) cntImp = cntImp + 1
-        if (WRFHydro_FieldList(fIndex)%realizedExport) cntExp = cntExp + 1
-      enddo
-
-      ! Report realized import fields
-      write(logMsg,'(a,a,i0,a)') TRIM(cname)//': ', &
-        'List of realized import fields(',cntImp,'):'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      write(logMsg,'(a,a5,a,a16,a,a)') TRIM(cname)//': ', &
-        'index',' ','name',' ','standardName'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      cntImp = 0
-      do fIndex=1, size(WRFHydro_FieldList)
-        if (.NOT.WRFHydro_FieldList(fIndex)%realizedImport) cycle
-        cntImp = cntImp + 1
-        write(logMsg,'(a,i5,a,a16,a,a)') TRIM(cname)//': ', &
-          cntImp,' ',TRIM(WRFHydro_FieldList(fIndex)%stateName), &
-          ' ',TRIM(WRFHydro_FieldList(fIndex)%stdName)
-        call ESMF_LogWrite(trim(LogMsg), ESMF_LOGMSG_INFO)
-      enddo
-
-      ! Report realized export fields
-      write(logMsg,'(a,a,i0,a)') TRIM(cname)//': ', &
-        'List of realized export fields(',cntExp,'):'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      write(logMsg,'(a,a5,a,a16,a,a)') TRIM(cname)//': ', &
-        'index',' ','name',' ','standardName'
-      call ESMF_LogWrite(TRIM(logMsg), ESMF_LOGMSG_INFO)
-      cntExp = 0
-      do fIndex=1, size(WRFHydro_FieldList)
-        if (.NOT.WRFHydro_FieldList(fIndex)%realizedExport) cycle
-        cntExp = cntExp + 1
-        write(logMsg,'(a,i5,a,a16,a,a)') TRIM(cname)//': ', &
-          cntExp,' ',TRIM(WRFHydro_FieldList(fIndex)%stateName), &
-          ' ',TRIM(WRFHydro_FieldList(fIndex)%stdName)
-        call ESMF_LogWrite(trim(LogMsg), ESMF_LOGMSG_INFO)
-      enddo
-
-    end subroutine
 
     !---------------------------------------------------------------------------
 
@@ -934,16 +773,11 @@ module WRFHydro_NUOPC
       character(ESMF_MAXSTR)     :: logMsg
       character(len=64)          :: modeStr
 
-      select case(is%wrap%mode(1))
-        case (WRFHYDRO_Offline)
-          modeStr ="WRFHYDRO_Offline"
-        case (WRFHYDRO_Coupled)
-          modeStr = "WRFHYDRO_Coupled"
-        case (WRFHYDRO_Hybrid)
-          modeStr = "WRFHYDRO_Hybrid"
-        case default
-          modeStr = "WRFHYDRO_Unknown"
-      end select
+      if(is%wrap%lsm_forcings(1)) then
+        modeStr = "WRFHYDRO_Coupled"
+      else
+        modeStr = "WRFHYDRO_Offline"
+      endif
       write (logMsg, "(A,(A,A))") trim(cname)//": ", &
         "Mode = ",trim(modeStr)
       call ESMF_LogWrite(trim(logMsg),ESMF_LOGMSG_INFO)
@@ -966,6 +800,7 @@ module WRFHydro_NUOPC
     type(type_InternalState)               :: is
     type(ESMF_Clock)                       :: modelClock
     type(ESMF_Time)                        :: currTime
+    type(ESMF_Time)                        :: invalidTime
     character(len=32)                      :: currTimeStr
     character(len=9)                       :: nStr
     integer                                :: iIndex
@@ -1006,6 +841,11 @@ module WRFHydro_NUOPC
 
     ! query the Component for its clock
     call NUOPC_ModelGet(gcomp, modelClock=modelClock, rc=rc)
+    if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+
+    ! set up invalid time (by convention)
+    call ESMF_TimeSet(invalidTime, yy=99999999, mm=01, dd=01, &
+      h=00, m=00, s=00, rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
     ! get the current time out of the clock
@@ -1081,11 +921,17 @@ module WRFHydro_NUOPC
         file=__FILE__)) &
         return  ! bail out
 
+      call NUOPC_SetTimestamp(is%wrap%NStateExp(1), time=currTime, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+
       call ESMF_LogWrite( &
         trim(cname)//': '//rname//' Read cap restart complete! Nest='//trim(nStr), &
         ESMF_LOGMSG_INFO)
       is%wrap%readRestart = .FALSE.
 
+    else
+      call NUOPC_SetTimestamp(is%wrap%NStateExp(1), time=invalidTime, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     endif ! readRestart
 
     ! set InitializeDataComplete Attribute to "true", indicating to the
@@ -1380,7 +1226,7 @@ subroutine CheckImport(gcomp, rc)
       if (btest(verbosity,16)) then
         call LogAdvance(nIndex=1,nStr=nStr)
       endif
-      call wrfhydro_nuopc_run(is%wrap%did,is%wrap%mode(1), &
+      call wrfhydro_nuopc_run(is%wrap%did,is%wrap%lsm_forcings(1), &
         is%wrap%clock(1),is%wrap%NStateImp(1),is%wrap%NStateExp(1),rc)
       if(ESMF_STDERRORCHECK(rc)) return ! bail out
       call ESMF_ClockAdvance(is%wrap%clock(1),rc=rc)
@@ -1414,16 +1260,12 @@ subroutine CheckImport(gcomp, rc)
       call ESMF_LogWrite(trim(cname)//': '//rname//&
         ' Advancing Nest='//trim(nStr),ESMF_LOGMSG_INFO)
 
-      select case(is%wrap%mode(nIndex))
-      case (WRFHYDRO_Offline)
-        nModeStr ="WRFHYDRO_Offline"
-      case (WRFHYDRO_Coupled)
+      if (is%wrap%lsm_forcings(nIndex)) then
         nModeStr = "WRFHYDRO_Coupled"
-      case (WRFHYDRO_Hybrid)
-        nModeStr = "WRFHYDRO_Hybrid"
-      case default
-        nModeStr = "WRFHYDRO_Unknown"
-      end select
+      else
+        nModeStr = "WRFHYDRO_Offline"
+      endif
+
       write (logMsg, "(A,(A,A,A),(A,A))") trim(cname)//': ', &
         'Nest(',trim(nStr),') ', &
         'Mode = ',trim(nModeStr)
