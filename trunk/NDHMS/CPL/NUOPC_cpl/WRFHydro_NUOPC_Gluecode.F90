@@ -51,6 +51,7 @@ module wrfhydro_nuopc_gluecode
     init_namelist_rt_field
   use orchestrator_base
   use wrfhydro_nuopc_fields
+  use wrfhydro_nuopc_flags
 
   implicit none
 
