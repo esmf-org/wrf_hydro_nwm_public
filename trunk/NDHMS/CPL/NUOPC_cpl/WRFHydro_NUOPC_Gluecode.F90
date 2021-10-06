@@ -64,6 +64,7 @@ module wrfhydro_nuopc_gluecode
   public :: WRFHYDRO_get_timestep
   public :: WRFHYDRO_set_timestep
   public :: WRFHYDRO_get_hgrid
+  public :: WRFHYDRO_get_restart
 
   ! PARAMETERS
   character(len=ESMF_MAXSTR) :: indir = 'WRFHYDRO_FORCING'
@@ -168,7 +169,7 @@ contains
     write(nlst(did)%hgrid,'(I1)') did
 
     if(nlst(did)%dt .le. 0) then
-      call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      call ESMF_LogSetError(ESMF_FAILURE, &
         msg=METHOD//": Timestep less than 1 is not supported!", &
         file=FILENAME,rcToReturn=rc)
       return  ! bail out
@@ -183,7 +184,7 @@ contains
 #endif
 
     if(nlst(did)%nsoil .gt. 4) then
-      call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      call ESMF_LogSetError(ESMF_FAILURE, &
         msg=METHOD//": Maximum soil levels supported is 4.", &
         file=FILENAME,rcToReturn=rc)
       return  ! bail out
@@ -304,7 +305,7 @@ contains
     cpl_outdate = startTimeStr(1:19)
 
     if(nlst(did)%dt .le. 0) then
-      call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      call ESMF_LogSetError(ESMF_FAILURE, &
         msg=METHOD//": Timestep less than 1 is not supported!", &
         file=FILENAME,rcToReturn=rc)
       return  ! bail out
@@ -371,7 +372,7 @@ contains
     rc = ESMF_SUCCESS
 
     if(.not. RT_DOMAIN(did)%initialized) then
-      call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      call ESMF_LogSetError(ESMF_FAILURE, &
         msg="WRHYDRO: Model has not been initialized!", &
         file=FILENAME,rcToReturn=rc)
       return  ! bail out
@@ -388,7 +389,7 @@ contains
     if(ESMF_STDERRORCHECK(rc)) return ! bail out
 
     if(nlst(did)%dt .le. 0) then
-      call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      call ESMF_LogSetError(ESMF_FAILURE, &
         msg=METHOD//": Timestep less than 1 is not supported!", &
         file=FILENAME,rcToReturn=rc)
       return  ! bail out
@@ -425,7 +426,7 @@ contains
       nlst(did)%GWBASESWCRT .eq. 0) then
        call ESMF_LogWrite(METHOD//": SUBRTSWCRT,OVRTSWCRT,GWBASESWCRT are zero!", &
             ESMF_LOGMSG_WARNING)
-      !call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      !call ESMF_LogSetError(ESMF_FAILURE, &
       !  msg=METHOD//": SUBRTSWCRT,OVRTSWCRT,GWBASESWCRT are zero!", &
       !  file=FILENAME,rcToReturn=rc)
       !return  ! bail out
@@ -927,6 +928,35 @@ contains
   end subroutine
 
   !-----------------------------------------------------------------------------
+
+#undef METHOD
+#define METHOD "WRFHYDRO_get_restart"
+
+  subroutine WRFHYDRO_get_restart(did,restart,rc)
+    ! ARGUMENTS
+    integer, intent(in)         :: did
+    logical, intent(out)        :: restart
+    integer, intent(out)        :: rc
+
+#ifdef DEBUG
+    call ESMF_LogWrite(MODNAME//": entered "//METHOD, ESMF_LOGMSG_INFO)
+#endif
+
+    rc = ESMF_SUCCESS
+
+    if (nlst(did)%rst_typ .eq. 0) then
+      restart = .FALSE.
+    else
+      restart = .TRUE.
+    endif
+
+#ifdef DEBUG
+    call ESMF_LogWrite(MODNAME//": leaving "//METHOD, ESMF_LOGMSG_INFO)
+#endif
+
+  end subroutine
+
+  !-----------------------------------------------------------------------------
   ! Conversion Utilities
   !-----------------------------------------------------------------------------
 
@@ -985,7 +1015,7 @@ contains
     timestr = '' ! clear string
 
     if (len(timestr) < 19) then
-      call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      call ESMF_LogSetError(ESMF_FAILURE, &
         msg=METHOD//": Time string is too short!", &
         file=FILENAME,rcToReturn=rc)
       return  ! bail out

@@ -126,11 +126,11 @@ module wrfhydro_nuopc_flags
     character(len=*), intent(out) :: string
     type(memory_flag), intent(in) :: val
     if (val == MEMORY_COPY) then
-      write(string,'(a)') 'FIELDMEMORY_COPY'
+      write(string,'(a)') 'MEMORY_COPY'
     elseif (val == MEMORY_POINTER) then
-      write(string,'(a)') 'FIELDMEMORY_POINTER'
+      write(string,'(a)') 'MEMORY_POINTER'
     else
-      write(string,'(a)') 'FIELDMEMORY_ERROR'
+      write(string,'(a)') 'MEMORY_ERROR'
     endif
   end subroutine memory_toString
 
@@ -144,9 +144,9 @@ module wrfhydro_nuopc_flags
     ustring = ESMF_UtilStringUpperCase(string, rc=rc)
     if (rc .ne. ESMF_SUCCESS) then
       val = MEMORY_ERROR
-    elseif (ustring .eq. 'FIELDMEMORY_COPY') then
+    elseif (ustring .eq. 'MEMORY_COPY') then
       val = MEMORY_COPY
-    elseif (ustring .eq. 'FIELDMEMORY_POINTER') then
+    elseif (ustring .eq. 'MEMORY_POINTER') then
       val = MEMORY_POINTER
     else
       val = MEMORY_ERROR
@@ -284,7 +284,7 @@ module wrfhydro_nuopc_flags
   subroutine missingval_frString(val, string)
     type(missingval_flag), intent(out) :: val
     character(len=*), intent(in) :: string
-    character(len=16) :: ustring
+    character(len=20) :: ustring
     integer :: rc
     ustring = ESMF_UtilStringUpperCase(string, rc=rc)
     if (rc .ne. ESMF_SUCCESS) then

@@ -971,6 +971,7 @@ module WRFHydro_NUOPC
     logical                                :: importUpdated
     logical                                :: exportUpdated
     character(len=32)                      :: initTypeStr
+    logical                                :: mdlRestart
     integer                                :: stat
 
     rc = ESMF_SUCCESS
@@ -1065,8 +1066,15 @@ module WRFHydro_NUOPC
         call state_copy_frhyd(is%wrap%NStateImp(1), is%wrap%did, rc=rc)
         if (ESMF_STDERRORCHECK(rc)) return  ! bail out
       endif
-      call NUOPC_SetTimestamp(is%wrap%NStateImp(1), time=currTime, rc=rc)
-      if (ESMF_STDERRORCHECK(rc)) return  ! bail out      
+      call WRFHYDRO_get_restart(is%wrap%did, restart=mdlRestart, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+      if (mdlRestart) then
+        call NUOPC_SetTimestamp(is%wrap%NStateImp(1), time=currTime, rc=rc)
+        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+      else
+        call NUOPC_SetTimestamp(is%wrap%NStateImp(1), time=invalidTime, rc=rc)
+        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+      endif
       importUpdated = .TRUE.
     else
       initTypeStr = is%wrap%init_import
@@ -1110,8 +1118,15 @@ module WRFHydro_NUOPC
         call state_copy_frhyd(is%wrap%NStateExp(1), is%wrap%did, rc=rc)
         if (ESMF_STDERRORCHECK(rc)) return  ! bail out
       endif
-      call NUOPC_SetTimestamp(is%wrap%NStateExp(1), time=currTime, rc=rc)
-      if (ESMF_STDERRORCHECK(rc)) return  ! bail out      
+      call WRFHYDRO_get_restart(is%wrap%did, restart=mdlRestart, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+      if (mdlRestart) then
+        call NUOPC_SetTimestamp(is%wrap%NStateExp(1), time=currTime, rc=rc)
+        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+      else
+        call NUOPC_SetTimestamp(is%wrap%NStateExp(1), time=invalidTime, rc=rc)
+        if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+      endif
       exportUpdated = .TRUE.
     else
       initTypeStr = is%wrap%init_export
@@ -1410,8 +1425,11 @@ subroutine CheckImport(gcomp, rc)
 
     if (is%wrap%misg_import.eq.MISSINGVAL_FAIL) then
       call state_check_missing(is%wrap%NStateImp(1), did=is%wrap%did, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     elseif (is%wrap%misg_import.eq.MISSINGVAL_PRESCRIBE) then
-      call state_prescribe_missing(is%wrap%NStateImp(1), did=is%wrap%did, fieldList=cap_fld_list, rc=rc)
+      call state_prescribe_missing(is%wrap%NStateImp(1), did=is%wrap%did, &
+        fieldList=cap_fld_list, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     elseif (is%wrap%misg_import.eq.MISSINGVAL_IGNORE) then
 !     DO NOTHING
     else
@@ -1420,6 +1438,14 @@ subroutine CheckImport(gcomp, rc)
         msg="Unknown missing value handler "//trim(misgValTypeStr), &
         line=__LINE__,file=__FILE__,rcToReturn=rc)
       return  ! bail out
+    endif
+
+    if (btest(diagnostic,16)) then
+      call model_debug(is%wrap%NStateImp(1), did=is%wrap%did, &
+        memflg=is%wrap%memr_import, &
+        filePrefix=trim(is%wrap%dirOutput)//"/wrfhydro_"// &
+          rname//"_imp_D"//trim(nStr)//"_"//trim(currTimeStr)//"_", rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     endif
 
     is%wrap%stepTimer(1) = is%wrap%stepTimer(1) + timeStep

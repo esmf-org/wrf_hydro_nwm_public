@@ -27,14 +27,14 @@ module wrfhydro_nuopc_fields
 
   type cap_fld_type
     sequence
-    character(len=64)           :: sd_name    = "dummy" ! standard name
-    character(len=64)           :: st_name    = "dummy" ! state name
-    character(len=64)           :: units      = "-"     ! units
-    logical                     :: ad_import  = .FALSE. ! advertise import
-    logical                     :: ad_export  = .FALSE. ! advertise export
-    logical                     :: rl_import  = .FALSE. ! realize import
-    logical                     :: rl_export  = .FALSE. ! realize export
-    real(ESMF_KIND_R8)          :: vl_fillv = ESMF_MISSING_VALUE ! default
+    character(len=64)           :: sd_name   = "dummy" ! standard name
+    character(len=64)           :: st_name   = "dummy" ! state name
+    character(len=64)           :: units     = "-"     ! units
+    logical                     :: ad_import = .FALSE. ! advertise import
+    logical                     :: ad_export = .FALSE. ! advertise export
+    real(ESMF_KIND_R8)          :: vl_fillv  = ESMF_MISSING_VALUE ! default
+    logical                     :: rl_import = .FALSE. ! realize import
+    logical                     :: rl_export = .FALSE. ! realize export
   end type cap_fld_type
 
   type(cap_fld_type),target,dimension(20) :: cap_fld_list = (/          &
@@ -98,6 +98,7 @@ module wrfhydro_nuopc_fields
   public state_copy_frhyd
   public state_check_missing
   public state_prescribe_missing
+  public model_debug
 
   !-----------------------------------------------------------------------------
   contains
@@ -530,7 +531,7 @@ module wrfhydro_nuopc_fields
         tokenCount=tokenCount, rc=rc)
       if (ESMF_STDERRORCHECK(rc)) return  ! bail out
       if (.not.((tokenCount.eq.5).or.(tokenCount.eq.6))) then
-        call ESMF_LogSetError(ESMF_RC_NOT_VALID, &
+        call ESMF_LogSetError(ESMF_FAILURE, &
           msg="Malformed ocn_export_fields item FORMAT="// &
             "'STATE_NAME' 'STANDARD_NAME' 'UNITS' 'IMPORT' 'EXPORT' "// &
 !            "['FILLVAL'] "// &
@@ -766,7 +767,7 @@ module wrfhydro_nuopc_fields
             indexflag=ESMF_INDEX_DELOCAL, rc=rc)
           if (ESMF_STDERRORCHECK(rc)) return
         case default
-          call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          call ESMF_LogSetError(ESMF_FAILURE, &
             msg=METHOD//": Field hookup missing: "//trim(fld_name), &
             file=FILENAME,rcToReturn=rc)
           return  ! bail out
@@ -790,7 +791,7 @@ module wrfhydro_nuopc_fields
       if (ESMF_STDERRORCHECK(rc)) return
     else
       cmemflg = memflg
-      call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+      call ESMF_LogSetError(ESMF_FAILURE, &
         msg=METHOD//": Field memory flag unknown: "//trim(cmemflg), &
         file=FILENAME,rcToReturn=rc)
       return  ! bail out
@@ -1014,7 +1015,7 @@ module wrfhydro_nuopc_fields
           call ESMF_FieldGet(field, farrayPtr=farrayPtr3d, rc=rc)
           if (ESMF_STDERRORCHECK(rc)) return
         else
-          call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          call ESMF_LogSetError(ESMF_FAILURE, &
             msg=METHOD//": dimCount is not supported.", &
             file=FILENAME,rcToReturn=rc)
           return  ! bail out
@@ -1062,7 +1063,7 @@ module wrfhydro_nuopc_fields
           case ('soldrain')
             rt_domain(did)%soldrain = farrayPtr2d
           case default
-            call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+            call ESMF_LogSetError(ESMF_FAILURE, &
               msg=METHOD//": Field hookup missing: "//trim(itemNameList(n)), &
               file=FILENAME,rcToReturn=rc)
             return  ! bail out
@@ -1127,7 +1128,7 @@ module wrfhydro_nuopc_fields
           call ESMF_FieldGet(field, farrayPtr=farrayPtr3d, rc=rc)
           if (ESMF_STDERRORCHECK(rc)) return
         else
-          call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          call ESMF_LogSetError(ESMF_FAILURE, &
             msg=METHOD//": dimCount is not supported.", &
             file=FILENAME,rcToReturn=rc)
           return  ! bail out
@@ -1174,7 +1175,7 @@ module wrfhydro_nuopc_fields
           case ('soldrain')
             farrayPtr2d = rt_domain(did)%soldrain
           case default
-            call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+            call ESMF_LogSetError(ESMF_FAILURE, &
               msg=METHOD//": Field hookup missing: "//trim(itemNameList(n)), &
               file=FILENAME,rcToReturn=rc)
             return  ! bail out
@@ -1200,7 +1201,7 @@ module wrfhydro_nuopc_fields
     integer                                :: itemCount
     character(len=64),allocatable          :: itemNameList(:)
     type(ESMF_StateItem_Flag), allocatable :: itemTypeList(:)
-    real(ESMF_KIND_R8), parameter          :: chkVal = ESMF_MISSING_VALUE
+    real(ESMF_KIND_R8), parameter          :: chkVal = real(ESMF_MISSING_VALUE)
     logical                                :: missng
     integer                                :: stat
 
@@ -1226,54 +1227,54 @@ module wrfhydro_nuopc_fields
         missng = .FALSE.
         select case (ItemNameList(n))
           case ('smc')
-            if (ANY(rt_domain(did)%smc.eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%smc.eq.chkVal)
           case ('slc')
-            if (ANY(rt_domain(did)%sh2ox.eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%sh2ox.eq.chkVal)
           case ('stc')
-            if (ANY(rt_domain(did)%stc.eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%stc.eq.chkVal)
           case ('sh2ox1')
-            if (ANY(rt_domain(did)%sh2ox(:,:,1).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%sh2ox(:,:,1).eq.chkVal)
           case ('sh2ox2')
-            if (ANY(rt_domain(did)%sh2ox(:,:,2).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%sh2ox(:,:,2).eq.chkVal)
           case ('sh2ox3')
-            if (ANY(rt_domain(did)%sh2ox(:,:,3).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%sh2ox(:,:,3).eq.chkVal)
           case ('sh2ox4')
-            if (ANY(rt_domain(did)%sh2ox(:,:,4).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%sh2ox(:,:,4).eq.chkVal)
           case ('smc1')
-            if (ANY(rt_domain(did)%smc(:,:,1).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%smc(:,:,1).eq.chkVal)
           case ('smc2')
-            if (ANY(rt_domain(did)%smc(:,:,2).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%smc(:,:,2).eq.chkVal)
           case ('smc3')
-            if (ANY(rt_domain(did)%smc(:,:,3).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%smc(:,:,3).eq.chkVal)
           case ('smc4')
-            if (ANY(rt_domain(did)%smc(:,:,4).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%smc(:,:,4).eq.chkVal)
           case ('smcmax1')
-            if (ANY(rt_domain(did)%smcmax1.eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%smcmax1.eq.chkVal)
           case ('stc1')
-            if (ANY(rt_domain(did)%stc(:,:,1).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%stc(:,:,1).eq.chkVal)
           case ('stc2')
-            if (ANY(rt_domain(did)%stc(:,:,2).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%stc(:,:,2).eq.chkVal)
           case ('stc3')
-            if (ANY(rt_domain(did)%stc(:,:,3).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%stc(:,:,3).eq.chkVal)
           case ('stc4')
-            if (ANY(rt_domain(did)%stc(:,:,4).eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%stc(:,:,4).eq.chkVal)
           case ('vegtyp')
-            if (ANY(rt_domain(did)%vegtyp.eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%vegtyp.eq.chkVal)
           case ('sfchead')
-            if (ANY(rt_domain(did)%overland%control%surface_water_head_lsm &
-              .eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%overland%control%surface_water_head_lsm &
+              .eq.chkVal)
           case ('infxsrt')
-            if (ANY(rt_domain(did)%infxsrt.eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%infxsrt.eq.chkVal)
           case ('soldrain')
-            if (ANY(rt_domain(did)%soldrain.eq.chkVal)) missng = .TRUE.
+            missng = any(rt_domain(did)%soldrain.eq.chkVal)
           case default
-            call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+            call ESMF_LogSetError(ESMF_FAILURE, &
               msg=METHOD//": Field hookup missing: "//trim(itemNameList(n)), &
               file=FILENAME,rcToReturn=rc)
             return  ! bail out
         endselect
         if (missng) then
-          call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+          call ESMF_LogSetError(ESMF_FAILURE, &
             msg=METHOD//": Missing value: "//trim(itemNameList(n)), &
             file=FILENAME,rcToReturn=rc)
           return  ! bail out
@@ -1299,7 +1300,7 @@ module wrfhydro_nuopc_fields
     integer                                :: itemCount
     character(len=64),allocatable          :: itemNameList(:)
     type(ESMF_StateItem_Flag), allocatable :: itemTypeList(:)
-    real(ESMF_KIND_R8), parameter          :: chkVal = ESMF_MISSING_VALUE
+    real(ESMF_KIND_R8), parameter          :: chkVal = real(ESMF_MISSING_VALUE)
     real(ESMF_KIND_R8)                     :: filVal
     integer                                :: stat
 
@@ -1324,6 +1325,7 @@ module wrfhydro_nuopc_fields
       if (itemTypeList(n) == ESMF_STATEITEM_FIELD) then
         call field_find_statename(fieldList, &
           stateName=itemNameList(n), fillValue=filVal, rc=rc)
+        if (ESMF_STDERRORCHECK(rc)) return
         select case (itemNameList(n))
           case ('smc')
             where (rt_domain(did)%smc.eq.chkVal) &
@@ -1387,7 +1389,7 @@ module wrfhydro_nuopc_fields
             where (rt_domain(did)%soldrain.eq.chkVal) &
               rt_domain(did)%soldrain = filVal
           case default
-            call ESMF_LogSetError(ESMF_RC_ARG_OUTOFRANGE, &
+            call ESMF_LogSetError(ESMF_FAILURE, &
               msg=METHOD//": Field hookup missing: "//trim(itemNameList(n)), &
               file=FILENAME,rcToReturn=rc)
             return  ! bail out
@@ -1401,5 +1403,77 @@ module wrfhydro_nuopc_fields
   end subroutine state_prescribe_missing
 
   !-----------------------------------------------------------------------------
+
+#undef METHOD
+#define METHOD "model_debug"
+  subroutine model_debug(state, did, memflg, filePrefix, rc)
+    type(ESMF_State), intent(inout)   :: state
+    integer, intent(in)               :: did
+    type(memory_flag)                 :: memflg
+    character(len=*)                  :: filePrefix
+    integer, intent(out)              :: rc
+    ! local variables
+    integer                                :: n
+    integer                                :: itemCount
+    character(len=64),allocatable          :: itemNameList(:)
+    type(ESMF_StateItem_Flag), allocatable :: itemTypeList(:)
+    type(ESMF_Field)                       :: cpyfield, outfield
+    type(ESMF_Grid)                        :: grid
+    integer                                :: stat
+    character(len=16)                      :: cmemflg
+
+    rc = ESMF_SUCCESS
+
+    if (memflg .eq. MEMORY_POINTER) then
+      call NUOPC_Write(state, &
+        fileNamePrefix=filePrefix, overwrite=.true., &
+        status=ESMF_FILESTATUS_REPLACE, timeslice=1, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return  ! bail out
+    elseif(memflg .eq. MEMORY_COPY) then
+      call ESMF_StateGet(state,itemCount=itemCount, rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return ! bail out
+
+      allocate(itemNameList(itemCount), stat=stat)
+      if (ESMF_LogFoundAllocError(statusToCheck=stat, &
+        msg="Allocation of state item name memory failed.", &
+        line=__LINE__, file=__FILE__)) return  ! bail out
+      allocate(itemTypeList(itemCount), stat=stat)
+      if (ESMF_LogFoundAllocError(statusToCheck=stat, &
+        msg="Allocation of state item type memory failed.", &
+        line=__LINE__, file=__FILE__)) return  ! bail out
+      call ESMF_StateGet(state,itemNameList=itemNameList, &
+        itemTypeList=itemTypeList,rc=rc)
+      if (ESMF_STDERRORCHECK(rc)) return
+
+      do n=1, itemCount
+        if (itemTypeList(n) == ESMF_STATEITEM_FIELD) then
+          call ESMF_StateGet(state, field=cpyfield, &
+            itemName=itemNameList(n),rc=rc)
+          if (ESMF_STDERRORCHECK(rc)) return
+          call ESMF_FieldGet(cpyfield, grid=grid, rc=rc)
+          if (ESMF_STDERRORCHECK(rc)) return
+          outfield = field_create(itemNameList(n), grid=grid, did=did, &
+            memflg=MEMORY_POINTER, rc=rc)
+          call ESMF_FieldWrite(outfield, variableName=itemNameList(n), &
+            fileName=trim(filePrefix)//"_"//trim(itemNameList(n))//".nc", &
+            iofmt=ESMF_IOFMT_NETCDF, rc=rc)
+          call ESMF_FieldDestroy(outfield, rc=rc)
+          if (ESMF_STDERRORCHECK(rc)) return
+        endif
+      enddo
+      deallocate(itemNameList)
+      deallocate(itemTypeList)
+    else
+      cmemflg = memflg
+      call ESMF_LogSetError(ESMF_FAILURE, &
+        msg=METHOD//": Field memory flag unknown: "//trim(cmemflg), &
+        file=FILENAME,rcToReturn=rc)
+      return  ! bail out
+    endif
+
+  end subroutine model_debug
+
+  !-----------------------------------------------------------------------------
+
 
 end module wrfhydro_nuopc_fields
