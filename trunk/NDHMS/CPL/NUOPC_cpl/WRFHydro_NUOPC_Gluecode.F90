@@ -17,7 +17,6 @@ module wrfhydro_nuopc_gluecode
   use NUOPC
   use WRFHydro_ESMF_Extensions
   use module_mpp_land, only: &
-    HYDRO_COMM_WORLD, &
     numprocs, &
     global_nx, &
     global_ny, &
@@ -40,6 +39,7 @@ module wrfhydro_nuopc_gluecode
   use module_HYDRO_io, only: &
     get_file_dimension
   use module_CPL_LAND, only: &
+    HYDRO_COMM_WORLD, &
     CPL_LAND_INIT, &
     cpl_outdate
   use module_rt_data, only: &

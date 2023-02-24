@@ -247,7 +247,7 @@ module WRFHydro_NUOPC
 
   private
 
-  public SetServices
+  public SetServices, SetVM
 
   CHARACTER(LEN=*), PARAMETER :: label_InternalState = 'InternalState'
 
