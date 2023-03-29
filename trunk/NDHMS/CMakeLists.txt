@@ -196,7 +196,11 @@ message("=============================================================")
 if (CMAKE_Fortran_COMPILER_ID MATCHES "GNU.*")
     # set compile flags for gfortran
     message ( "-- Using gfortran")
-    set (CMAKE_Fortran_FLAGS "-cpp -O2 -g -w -ffree-form -ffree-line-length-none -fconvert=big-endian -frecord-marker=4 -fallow-argument-mismatch")
+    set (CMAKE_Fortran_FLAGS "-cpp -O2 -g -w -ffree-form -ffree-line-length-none -fconvert=big-endian -frecord-marker=4")
+    if (CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL "10")
+      message (FATAL_ERROR "-- Using gfortran greater than 10")
+      set (CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
+    endif (CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL "10")
 elseif (CMAKE_Fortran_COMPILER_ID MATCHES "Intel.*")
     # set compile flags for ifort
     message ( "Using ifort")

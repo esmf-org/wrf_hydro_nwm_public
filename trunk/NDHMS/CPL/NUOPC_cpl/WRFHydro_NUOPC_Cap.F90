@@ -372,14 +372,14 @@ module WRFHydro_NUOPC
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
@@ -783,14 +783,14 @@ module WRFHydro_NUOPC
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
@@ -875,14 +875,14 @@ module WRFHydro_NUOPC
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
@@ -985,14 +985,14 @@ module WRFHydro_NUOPC
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
@@ -1186,14 +1186,14 @@ module WRFHydro_NUOPC
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
@@ -1305,14 +1305,14 @@ subroutine CheckImport(gcomp, rc)
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
@@ -1373,14 +1373,14 @@ subroutine CheckImport(gcomp, rc)
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
@@ -1578,14 +1578,14 @@ subroutine CheckImport(gcomp, rc)
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     diagnostic = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     call ESMF_AttributeGet(gcomp, name="Verbosity", value=value, &
       defaultValue="0", convention="NUOPC", purpose="Instance", rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
     verbosity = ESMF_UtilString2Int(value, &
-      specialStringList=(/"min","max","bit16","maxplus"/), &
+      specialStringList=(/"min    ","max    ","bit16  ","maxplus"/), &
       specialValueList=(/0,65535,65536,131071/), rc=rc)
     if (ESMF_STDERRORCHECK(rc)) return  ! bail out
 
