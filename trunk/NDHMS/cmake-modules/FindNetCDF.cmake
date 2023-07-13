@@ -25,6 +25,16 @@
 #  target_link_libraries (uses_f90_interface ${NETCDF_LIBRARIES})
 #  target_link_libraries (only_uses_c_interface ${NETCDF_LIBRARIES_C})
 
+
+message(WARNING NETCDF_DIR)
+if(NOT DEFINED ENV{NETCDF})
+  if(DEFINED ENV{NETCDF_DIR})
+    set(ENV{NETCDF} $ENV{NETCDF_DIR})
+  elseif(DEFINED ENV{NETCDF_ROOT})
+    set(ENV{NETCDF} $ENV{NETCDF_ROOT})
+  endif()
+endif()
+
 if (NETCDF_INCLUDES AND NETCDF_LIBRARIES)
   # Already in cache, be silent
   set (NETCDF_FIND_QUIETLY TRUE)
