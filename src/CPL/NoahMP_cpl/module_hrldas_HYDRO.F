@@ -58,6 +58,39 @@ module module_HRLDAS_HYDRO
 
 
 CONTAINS
+      subroutine hrldas_cpl_rt_in(did,STC,SMC,SH2OX,WTRFLX,infxsrt,soldrain,ii,jj,kk)
+        implicit none
+
+        integer,intent(in) :: did
+        real,dimension(ii,jj,kk),intent(in) :: STC,SMC,SH2OX,WTRFLX
+        real,dimension(ii,jj),intent(in) :: infxsrt,soldrain
+        integer,intent(in) :: ii,jj,kk
+
+        ! decompose the hrldas 1-d data into routing domain
+        RT_DOMAIN(did)%STC = STC
+        RT_DOMAIN(did)%SMC = SMC
+        RT_DOMAIN(did)%SH2OX = SH2OX
+        RT_DOMAIN(did)%wtrflx = WTRFLX
+        RT_DOMAIN(did)%infxsrt = infxsrt
+        RT_DOMAIN(did)%soldrain = soldrain
+
+      end subroutine hrldas_cpl_rt_in
+
+      subroutine hrldas_cpl_rt_out(did,STC,SMC,SH2OX,sfcheadrt,ii,jj,kk)
+        implicit none
+
+        integer,intent(in) :: did
+        integer, intent(in) :: ii,jj,kk
+        real,dimension(ii,jj,kk),intent(out) :: STC,SMC,SH2OX
+        real,dimension(ii,jj),intent(out) :: sfcheadrt
+
+        ! add for update the HRLDAS state variable.
+        STC = rt_domain(did)%STC
+        SMC = rt_domain(did)%SMC
+        SH2OX = rt_domain(did)%SH2OX
+        sfcheadrt = rt_domain(did)%overland%control%surface_water_head_lsm
+
+      end subroutine hrldas_cpl_rt_out
 
     subroutine hrldas_cpl_HYDRO(STC,SMC,SH2OX,WTRFLX,infxsrt,sfcheadrt,soldrain,ii,jj,kk)
 
@@ -163,17 +196,11 @@ CONTAINS
 
         if(nlst(did)%channel_only       .eq. 0 .and. &
            nlst(did)%channelBucket_only .eq. 0        ) then
-           ! decompose the hrldas 1-d data into routing domain
-           RT_DOMAIN(did)%STC = STC
-           RT_DOMAIN(did)%SMC = SMC
-           RT_DOMAIN(did)%SH2OX = SH2OX
-           RT_DOMAIN(did)%infxsrt = infxsrt
-           RT_DOMAIN(did)%soldrain = soldrain
+           call hrldas_cpl_rt_in(did,STC,SMC,SH2OX,WTRFLX,&
+                                 infxsrt,soldrain,ii,jj,kk)
         end if
 
            if(nlst(did)%GWBASESWCRT == 3) gw2d(did)%qsgw = qsgw
-
-        RT_DOMAIN(did)%wtrflx = WTRFLX
 
 #ifdef MPP_LAND
         if(my_id .eq. IO_id) then
@@ -197,11 +224,7 @@ CONTAINS
 
         if(nlst(did)%channel_only       .eq. 0 .and. &
            nlst(did)%channelBucket_only .eq. 0        ) then
-           ! add for update the HRLDAS state variable.
-           STC = rt_domain(did)%STC
-           SMC = rt_domain(did)%SMC
-           SH2OX = rt_domain(did)%SH2OX
-           sfcheadrt = rt_domain(did)%overland%control%surface_water_head_lsm
+           call hrldas_cpl_rt_out(did,STC,SMC,SH2OX,sfcheadrt,ii,jj,kk)
         end if
         if(nlst(did)%GWBASESWCRT == 3)  qsgw = gw2d(did)%qsgw
 

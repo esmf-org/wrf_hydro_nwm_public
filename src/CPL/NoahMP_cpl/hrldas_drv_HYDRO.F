@@ -20,6 +20,46 @@
 !  User controllable options: <if applicable>
 
 !2345678
+       subroutine hrldas_drv_in(STC_i,SMC_i,SH2OX_i,WTRFLX_i,infxsrt,soldrain,ii,jj,kk)
+          use module_hrldas_HYDRO, only: hrldas_cpl_rt_in
+          implicit none
+
+          real,dimension(ii,kk,jj),intent(in) :: STC_i,SMC_i,SH2OX_i,WTRFLX_i
+          real,dimension(ii,jj),intent(in) ::infxsrt,soldrain
+          integer, intent(in) :: ii,jj,kk
+
+          integer :: k
+          real,dimension(ii,jj,kk) :: STC,SMC,SH2OX,WTRFLX
+
+          do k = 1, kk
+              STC(:,:,k) = STC_i(:,k,:)
+              SMC(:,:,k) = SMC_i(:,k,:)
+              SH2OX(:,:,k) = SH2OX_i(:,k,:)
+              WTRFLX(:,:,k) = WTRFLX_i(:,k,:)
+          end do
+          call hrldas_cpl_rt_in(1,STC,SMC,SH2OX,WTRFLX,infxsrt,soldrain,ii,jj,kk)
+
+       end subroutine hrldas_drv_in
+
+       subroutine hrldas_drv_out(STC_o,SMC_o,SH2OX_o,sfcheadrt,ii,jj,kk)
+          use module_hrldas_HYDRO, only: hrldas_cpl_rt_out
+          implicit none
+
+          real,dimension(ii,kk,jj),intent(out) :: STC_o,SMC_o,SH2OX_o
+          real,dimension(ii,jj),intent(out) :: sfcheadrt
+          integer,intent(in) :: ii,jj,kk
+
+          integer :: k
+          real,dimension(ii,jj,kk) :: STC,SMC,SH2OX
+
+          call hrldas_cpl_rt_out(1,STC,SMC,SH2OX,sfcheadrt,ii,jj,kk)
+          do k = 1, kk
+               STC_o(:,k,:) = STC(:,:,k)
+               SMC_o(:,k,:) = SMC(:,:,k)
+               SH2OX_o(:,k,:) = SH2OX(:,:,k)
+          end do
+
+       end subroutine hrldas_drv_out
 
        subroutine hrldas_drv_HYDRO(STC_io,SMC_io,SH2OX_io,WTRFLX_i,infxsrt,sfcheadrt,soldrain,ii,jj,kk)
           use module_hrldas_HYDRO, only: hrldas_cpl_HYDRO

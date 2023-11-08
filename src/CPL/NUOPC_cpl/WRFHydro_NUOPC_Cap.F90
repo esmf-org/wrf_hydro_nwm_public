@@ -259,6 +259,7 @@ module WRFHydro_NUOPC
   use module_noahmp_hrldas_driver, only: &
     noahmp_ini => land_driver_ini, &
     noahmp_exe => land_driver_exe, &
+    noahmp_h2l => land_driver_hyd_to_lsm, &
     noahmp_olddate   => olddate, &
     noahmp_newdate   => newdate, &
     noahmp_startdate => startdate, &
@@ -1629,6 +1630,7 @@ module WRFHydro_NUOPC
     endif
 
 #ifdef NOAHMP
+    call noahmp_h2l()
     call noahmp_exe(int(advanceCount), is%wrap%noahmp_state)
 #else
     call wrfhydro_nuopc_run(is%wrap%did,is%wrap%lsm_forcings(1), &

@@ -1365,7 +1365,7 @@ CONTAINS
 ! OUTPUT for PARFLOW
             WTRFLX(i,1,j) = (QINSUR * 1000) - (ESOIL + ETRANI(1))
             do k=2, NSOIL
-              WTRFLX(i,k,j) = ETRANI(k)
+              WTRFLX(i,k,j) = -(ETRANI(k))
             enddo
 
 

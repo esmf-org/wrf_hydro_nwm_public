@@ -1669,6 +1669,28 @@ endif
 end subroutine land_driver_ini
 
 !===============================================================================
+      subroutine land_driver_lsm_to_hyd()
+        implicit  none
+        call hrldas_drv_in(TSLB(:,1:NSOIL,:), &
+                           SMOIS(:,1:NSOIL,:), &
+                           SH2O(:,1:NSOIL,:), &
+                           WTRFLX(:,1:NSOIL,:), &
+                           infxsrt, &
+                           soldrain, &
+                           ix,jx,NSOIL)
+      end subroutine land_driver_lsm_to_hyd
+
+!===============================================================================
+      subroutine land_driver_hyd_to_lsm()
+        implicit  none
+        call hrldas_drv_out(TSLB(:,1:NSOIL,:), &
+                            SMOIS(:,1:NSOIL,:), &
+                            SH2O(:,1:NSOIL,:), &
+                            sfcheadrt, &
+                            ix,jx,NSOIL)
+      end subroutine land_driver_hyd_to_lsm
+
+!===============================================================================
   subroutine land_driver_exe(itime, state)
     use module_hydro_io, only: read_channel_only
     use state_module, only: state_type
