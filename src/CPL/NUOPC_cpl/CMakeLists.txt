@@ -1,7 +1,7 @@
 ### Library Prerequisites
-if (NOT TARGET esmf)
+if (NOT TARGET ESMF)
   find_package(ESMF MODULE REQUIRED)
-endif (NOT TARGET esmf)
+endif (NOT TARGET ESMF)
 
 ### Library Files
 list(APPEND wrfhydro_nuopc_files
@@ -47,7 +47,7 @@ endif (WRF_HYDRO_NUDGING STREQUAL "1")
 add_library(wrfhydro_nuopc STATIC ${wrfhydro_nuopc_files})
 add_dependencies(wrfhydro_nuopc ${wrfhydro_nuopc_deps})
 target_link_libraries(wrfhydro_nuopc PUBLIC ${wrfhydro_nuopc_linklibs})
-target_link_libraries(wrfhydro_nuopc PUBLIC esmf)
+target_link_libraries(wrfhydro_nuopc PUBLIC ESMF)
 target_link_libraries(wrfhydro_nuopc PUBLIC ${NETCDF_LIBRARIES})
 
 ### Library Installation
